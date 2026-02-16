@@ -286,21 +286,13 @@
             box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
         }
 
-        /* Scan line accent */
-        .hero-scanline {
+        /* Hero canvas */
+        #heroCanvas {
             position: absolute;
-            left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
-            animation: scanline 6s linear infinite;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
-        }
-
-        @keyframes scanline {
-            0% { top: -5%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 105%; opacity: 0; }
+            z-index: 1;
         }
 
         /* ============ REST OF SITE ============ */
@@ -382,8 +374,8 @@
         <div class="geo-shape"></div>
         <div class="geo-shape"></div>
     </div>
-    <!-- Scan line -->
-    <div class="hero-scanline"></div>
+    <!-- Canvas particles -->
+    <canvas id="heroCanvas"></canvas>
     <!-- Content -->
     <div class="container hero-content">
         <div class="hero-label">Software That Ships</div>
@@ -499,6 +491,87 @@
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Canvas particle animation
+    (function() {
+        const canvas = document.getElementById('heroCanvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, particles, mouse = { x: -1000, y: -1000 };
+        const COUNT = 60, CDIST = 150, MDIST = 200;
+
+        function resize() {
+            const hero = canvas.parentElement;
+            w = canvas.width = hero.offsetWidth;
+            h = canvas.height = hero.offsetHeight;
+        }
+
+        function Particle() {
+            this.x = Math.random() * w; this.y = Math.random() * h;
+            this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+            this.r = Math.random() * 2 + 1;
+            this.shape = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'tri' : 'diamond') : 'circle';
+            this.rot = Math.random() * Math.PI * 2;
+            this.rotSpeed = (Math.random() - 0.5) * 0.02;
+            this.size = this.shape !== 'circle' ? Math.random() * 6 + 4 : this.r;
+            this.alpha = Math.random() * 0.5 + 0.3;
+        }
+
+        function init() { resize(); particles = []; for (let i = 0; i < COUNT; i++) particles.push(new Particle()); }
+
+        function drawShape(p) {
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            ctx.globalAlpha = p.alpha; ctx.strokeStyle = 'rgba(59,130,246,0.6)';
+            ctx.fillStyle = 'rgba(59,130,246,0.15)'; ctx.lineWidth = 1;
+            if (p.shape === 'tri') {
+                const s = p.size; ctx.beginPath(); ctx.moveTo(0, -s);
+                ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (p.shape === 'diamond') {
+                const s = p.size; ctx.beginPath(); ctx.moveTo(0, -s);
+                ctx.lineTo(s * 0.6, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.6, 0);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(59,130,246,0.5)'; ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.rot += p.rotSpeed;
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const md = Math.sqrt(dx * dx + dy * dy);
+                if (md < MDIST) { const f = (MDIST - md) / MDIST * 0.03; p.vx += dx / md * f; p.vy += dy / md * f; }
+                p.vx *= 0.999; p.vy *= 0.999;
+                if (p.x < -20) p.x = w + 20; if (p.x > w + 20) p.x = -20;
+                if (p.y < -20) p.y = h + 20; if (p.y > h + 20) p.y = -20;
+                drawShape(p);
+            }
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < CDIST) {
+                        ctx.strokeStyle = `rgba(59,130,246,${(1 - dist / CDIST) * 0.15})`;
+                        ctx.lineWidth = 1; ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        canvas.parentElement.addEventListener('mousemove', function(e) {
+            const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+        });
+        canvas.parentElement.addEventListener('mouseleave', function() { mouse.x = -1000; mouse.y = -1000; });
+        window.addEventListener('resize', resize);
+        init(); animate();
+    })();
 
     document.getElementById('contactForm').addEventListener('submit', function(e) {
         e.preventDefault();
