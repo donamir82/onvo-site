@@ -96,6 +96,18 @@
             overflow: hidden;
         }
 
+        .hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            opacity: 0.3;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
         #heroCanvas {
             position: absolute;
             top: 0;
@@ -420,6 +432,9 @@
 </nav>
 
 <section class="hero">
+    <video class="hero-video" autoplay muted loop playsinline>
+        <source src="onvo-hero.mp4" type="video/mp4">
+    </video>
     <canvas id="heroCanvas"></canvas>
     <div class="container hero-content">
         <div class="hero-label">Software That Ships</div>
