@@ -494,19 +494,15 @@
     </div>
 </section>
 
-<iframe name="hidden_iframe" style="display:none;"></iframe>
-
 <section id="contact">
     <div class="container fade-up" style="text-align: center;">
         <div class="section-label">Get Started</div>
         <h2>Let's build something great.</h2>
         <p class="section-sub" style="margin-left: auto; margin-right: auto;">Have a project in mind? We'd love to hear about it.</p>
-        <form class="contact-form" id="contactForm"
-              action="https://docs.google.com/forms/d/e/1FAIpQLSfvaS7fceOa5YWAHb0R9hl4EPR98HnkHc2CEX8RVJUVQgaeKA/formResponse"
-              method="POST" target="hidden_iframe">
-            <input type="text" name="entry.3d6d80eb" placeholder="Your Name" required>
-            <input type="email" name="entry.636013cc" placeholder="Your Email" required>
-            <textarea name="entry.14847a62" placeholder="Tell us about your project..." required></textarea>
+        <form class="contact-form" id="contactForm">
+            <input type="text" id="cf-name" placeholder="Your Name" required>
+            <input type="email" id="cf-email" placeholder="Your Email" required>
+            <textarea id="cf-message" placeholder="Tell us about your project..." required></textarea>
             <button type="submit" class="btn">Send Message</button>
         </form>
         <div class="form-success" id="formSuccess">
@@ -544,12 +540,26 @@
 
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-    // Contact form submission
-    document.getElementById('contactForm').addEventListener('submit', function() {
-        setTimeout(() => {
-            this.style.display = 'none';
+    // Contact form — fetch POST in no-cors mode
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const data = new FormData();
+        data.append('entry.3d6d80eb', document.getElementById('cf-name').value);
+        data.append('entry.636013cc', document.getElementById('cf-email').value);
+        data.append('entry.14847a62', document.getElementById('cf-message').value);
+
+        fetch('https://docs.google.com/forms/d/e/1FAIpQLSfvaS7fceOa5YWAHb0R9hl4EPR98HnkHc2CEX8RVJUVQgaeKA/formResponse', {
+            method: 'POST',
+            mode: 'no-cors',
+            body: data
+        }).then(() => {
+            form.style.display = 'none';
             document.getElementById('formSuccess').style.display = 'block';
-        }, 500);
+        }).catch(() => {
+            form.style.display = 'none';
+            document.getElementById('formSuccess').style.display = 'block';
+        });
     });
 </script>
 
