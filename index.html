@@ -540,19 +540,20 @@
 
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-    // Contact form — fetch POST in no-cors mode
+    // Contact form — URL-encoded POST in no-cors mode
     document.getElementById('contactForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = this;
-        const data = new FormData();
-        data.append('entry.3d6d80eb', document.getElementById('cf-name').value);
-        data.append('entry.636013cc', document.getElementById('cf-email').value);
-        data.append('entry.14847a62', document.getElementById('cf-message').value);
+        const params = new URLSearchParams();
+        params.append('entry.3d6d80eb', document.getElementById('cf-name').value);
+        params.append('entry.636013cc', document.getElementById('cf-email').value);
+        params.append('entry.14847a62', document.getElementById('cf-message').value);
 
         fetch('https://docs.google.com/forms/d/e/1FAIpQLSfvaS7fceOa5YWAHb0R9hl4EPR98HnkHc2CEX8RVJUVQgaeKA/formResponse', {
             method: 'POST',
             mode: 'no-cors',
-            body: data
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
         }).then(() => {
             form.style.display = 'none';
             document.getElementById('formSuccess').style.display = 'block';
